@@ -1,0 +1,21 @@
+{
+  "name": "webcito/php-auto-image-resizer",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "thomas kirsch",
+      "email": "t.kirsch@webcito.de"
+    }
+  ],
+  "require": {
+    "php": ">=8.2",
+    "ext-imagick": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Webcito\\" : "src/"
+    }
+  }
+}

@@ -1,0 +1,4 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule \.(?:jpe?g|gif|png|webp)$ /image-resizer.php
+</IfModule>
