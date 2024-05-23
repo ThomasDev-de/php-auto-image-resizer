@@ -8,19 +8,6 @@ use JetBrains\PhpStorm\NoReturn;
 
 class ImageCache
 {
-    /**
-     * An array of screen resolutions.
-     *
-     *  320px: für mobile Geräte
-     *  480px: für mobile Geräte im Querformat
-     *  768px: für Tablets
-     *  992px: für kleine Laptops
-     *  1200px: für Desktops
-     *
-     * @var array $resolutions
-     * @see https://www.w3schools.com/howto/howto_css_media_query_breakpoints.asp for commonly used screen resolutions
-     */
-    protected static array $resolutions = [1200, 992, 768, 480, 320];
     protected static int $browserCache = 604800; // a week
 
     protected static string $documentRoot;
