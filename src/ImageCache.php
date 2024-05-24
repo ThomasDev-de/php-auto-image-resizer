@@ -165,12 +165,38 @@ class ImageCache
     {
         // Strips the image of any profiles, comments - basically unnecessary metadata. This greatly decreases size.
         $image->stripImage();
+
         // Sets the quality of the image. Higher is better, but produces a larger file size.
-        $image->setImageCompressionQuality($options["compressionQuality"]);
+        $this->setQualityBasedOnWidth(
+            image: $image,
+            maxWidth: max($options["breakpoints"]),
+            minQuality: $options["compressionQuality"]
+        );
         // The '0' indicates that the height should be auto-calculated based on an aspect ratio
         $image->scaleImage($this->desiredWidth, 0);
         // writing the image to the cache
         $image->writeImage($this->targetImagePath);
+    }
+
+    /**
+     * Set the compression quality of the image based on its width
+     *
+     * @param Imagick $image The image object
+     * @param int $maxWidth The maximum width threshold for setting the compression quality
+     * @param int $minQuality The minimum compression quality to be set
+     * @param int $maxQuality The maximum compression quality to be set
+     * @return void
+     * @throws ImagickException
+     */
+    protected function setQualityBasedOnWidth(Imagick $image, int $maxWidth = 1000, int $minQuality = 10, int $maxQuality = 100): void
+    {
+        $width = $image->getImageWidth();
+        if ($width >= $maxWidth) {
+            $image->setImageCompressionQuality($minQuality);
+        } else {
+            $quality = ($width / $maxWidth) * ($maxQuality - $minQuality) + $minQuality;
+            $image->setImageCompressionQuality($quality);
+        }
     }
 
     /**
