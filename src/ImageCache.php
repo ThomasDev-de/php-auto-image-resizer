@@ -23,7 +23,7 @@ class ImageCache
         "cache" => "cache",
         "resolution" => null,
         "breakpoints" => [1200, 992, 768, 480, 320],
-        "compressionQuality" => 100
+        "compressionQuality" => 85
     ];
 
     /**
@@ -77,7 +77,12 @@ class ImageCache
         // Get the width of the image
         try {
             $image->readImage($this->sourceImagePath);
+
+            // Die Methode stripImage() entfernt alle Profile und Kommentare aus dem Bild,
+            // was dazu beiträgt, die Dateigröße ohne große Qualitätseinbußen zu verringern. Bitte beachten Sie, dass dadurch auch Farbprofile entfernt werden, was die Farbwahrnehmung beeinflussen kann. Also bitte nutzen Sie es mit Vorsicht.
+            $image->stripImage();
             $image->setImageCompressionQuality($options["compressionQuality"]);
+
             $imageWidth = $image->getImageWidth();
         } catch (ImagickException $e) {
             http_response_code(403);
@@ -139,7 +144,7 @@ class ImageCache
     {
         if (!is_dir("$dir")) {
             // dir does not exist, so make it
-            if (!mkdir("$dir", 0777, true)) {
+            if (!mkdir("$dir", 0755, true)) {
                 // and check again to protect against race conditions
                 if (!is_dir("$dir")) {
                     // failed to make that directory

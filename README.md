@@ -49,7 +49,7 @@ sudo service apache2 restart
 
 ```shell
 composer install webcito/php-auto-image-resizer dev-main
-composer dump autoload
+composer dump-autoload
 ```
 
 ### manually

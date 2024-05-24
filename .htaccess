@@ -1,4 +1,10 @@
+ # Bilder Umleiten auf /image-resizer.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule \.(?:jpe?g|gif|png|webp)$ /image-resizer.php
+    RewriteBase /
+    # Wenn der angeforderte Pfad auf image-resizer.php zeigt, brechen Sie die Verarbeitung ab.
+    RewriteRule ^image-resizer\.php$ - [L]
+
+    # Umschreiben aller JPEG-, JPG-, GIF-, PNG-, WEBP-Bilder zu image-resizer.php
+    RewriteRule \.(?:jpeg|jpg|gif|png|webp)$ /image-resizer.php [QSA,L]
 </IfModule>
