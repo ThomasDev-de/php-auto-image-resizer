@@ -10,7 +10,7 @@
     </script>
 </head>
 <body>
-<img src="images/nature-8727795.jpg" alt="test1">
+<img src="images/nature-8727795.jpg" alt="test1" style="width: 100%">
 <script>
     window.addEventListener("resize", () => {
         document.cookie = "resolution=" + Math.max(screen.width, screen.height)+"; path=/; SameSite=None";

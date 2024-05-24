@@ -57,7 +57,7 @@ class ImageCache
         $this->sourceFolder = dirname($requested_uri) . DIRECTORY_SEPARATOR;
         // Set the source image path
         $this->sourceImagePath = self::$documentRoot . $requested_uri;
-        // Set the image file name (includes extension)
+        // Set the image file name (includes an extension)
         $this->imageFile = basename($requested_uri);
         // Prompt the user with a message and halt if the source image does not exist, or if it isn't readable
         if (!file_exists($this->sourceImagePath)) {
@@ -96,10 +96,6 @@ class ImageCache
         try {
             $image->readImage($this->sourceImagePath);
 
-            // Strips the image of any profiles, comments - basically unnecessary metadata. This greatly decreases size.
-            $image->stripImage();
-            // Sets the quality of the image. Higher is better, but produces a larger file size.
-            $image->setImageCompressionQuality($options["compressionQuality"]);
             // Get the current width of the source image
             $imageWidth = $image->getImageWidth();
         } catch (ImagickException $e) {
@@ -112,7 +108,13 @@ class ImageCache
         // So we set the source image as the target, output it directly, and halt the script
         if ($imageWidth < $this->maxScreenWidth) {
             $this->targetImagePath = $this->sourceImagePath;
-            $this->output($image);
+            try {
+                $this->output($image);
+            } catch (ImagickException $e) {
+                // If there was an error (e.g. write access denied), send an HTTP 403 Forbidden status code
+                http_response_code(403);
+                exit("Imagick error: " . $e->getMessage());
+            }
         }
 
         // Construct the path for the cached (optimized) image version
@@ -132,28 +134,43 @@ class ImageCache
         // ./cache/desiredWidth/sourceFolder/imageFile
         $this->targetImagePath = $targetDirectory . '/' . $this->imageFile;
 
-        // If the cached image file already exists and is up-to-date, directly output it
-        if (file_exists($this->targetImagePath)) {
-            if ($this->isCacheUpToDate($this->sourceImagePath, $this->targetImagePath)) {
-                $this->output($image);
-            }
-        }
 
-        // If the cached image doesn't exist, or is outdated, optimize the source image
-        // Scale the image down to the desired width (keeping an aspect ratio),
-        // write it to the determined cache location, and output it
         try {
-            // The '0' indicates that the height should be auto-calculated based on an aspect ratio
-            $image->scaleImage($this->desiredWidth, 0);
-            // writing the image to the cache
-            $image->writeImage($this->targetImagePath);
+            // If the cached image file already exists and is up-to-date, directly output it
+            if (file_exists($this->targetImagePath)) {
+                if ($this->isCacheUpToDate($this->sourceImagePath, $this->targetImagePath)) {
+                    $this->output($image);
+                }
+            }
+
+            // If the cached image doesn't exist, or is outdated, optimize the source image
+            // Scale the image down to the desired width (keeping an aspect ratio),
+            // write it to the determined cache location, and output it
+            $this->writeImage($image, $options);
+            // Finally, output the image to the client
+            $this->output($image);
         } catch (ImagickException $e) {
             // If there was an error (e.g. write access denied), send an HTTP 403 Forbidden status code
             http_response_code(403);
             exit("Imagick error: " . $e->getMessage());
         }
-        // Finally, output the image to the client
-        $this->output($image);
+
+
+    }
+
+    /**
+     * @throws ImagickException
+     */
+    protected function writeImage(Imagick $image, array $options): void
+    {
+        // Strips the image of any profiles, comments - basically unnecessary metadata. This greatly decreases size.
+        $image->stripImage();
+        // Sets the quality of the image. Higher is better, but produces a larger file size.
+        $image->setImageCompressionQuality($options["compressionQuality"]);
+        // The '0' indicates that the height should be auto-calculated based on an aspect ratio
+        $image->scaleImage($this->desiredWidth, 0);
+        // writing the image to the cache
+        $image->writeImage($this->targetImagePath);
     }
 
     /**
@@ -206,17 +223,14 @@ class ImageCache
      *
      * @param Imagick $image The image to be outputted to the client
      * @return void
+     * @throws ImagickException
      */
     #[NoReturn] protected function output(Imagick $image): void
     {
         // Tries to retrieve the image format (needed for the Content-Type header)
-        try {
-            $extension = $image->getImageFormat();
-        } catch (ImagickException $e) {
-            // Error handling if Imagick fails to retrieve the image format
-            http_response_code(403);
-            exit("Imagick error: " . $e->getMessage());
-        }
+
+        $extension = $image->getImageFormat();
+
         // Set cache expiration headers
         $expires = gmdate('D, d M Y H:i:s', time() + self::$browserCache) . ' GMT';
 
