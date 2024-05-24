@@ -8,10 +8,25 @@ First, the HTACCESS file must be adapted or created in the document root.
 
 Add the following lines:
 
-```shell
+```apacheconf
 <IfModule mod_rewrite.c>
+    # Turning on the apache rewrite engine
     RewriteEngine On
-    RewriteRule \.(?:jpe?g|gif|png|webp)$ /image-resizer.php
+     # Specifies the base URL for per-directory rewrites
+    RewriteBase /
+    # First rule: If the requested path is "image-resizer.php", stop processing further rules.
+    # ^image-resizer\.php$ - is a regular expression that exactly matches "image-resizer.php"
+    # [L] is a flag that tells mod_rewrite to stop processing the rule set
+    RewriteRule ^image-resizer\.php$ - [L]
+
+    # Second rule: If the requested URI is any(.) file that ends (anchors the end position $)
+    # with jpeg, jpg, gif, png, or webp, rewrite the request to "/image-resizer.php"
+    # \.(?:jpeg|jpg|gif|png|webp)$ - is a regular expression that matches jpeg, jpg, gif, png, or webp files.
+    # /image-resizer.php is the target where the matched request will be rewritten to
+    # [QSA,L] are flags. QSA, or 'QueryString Append', forces the rewrite engine to append
+    # a query string part in the substitution string to the existing one. L, or 'last',
+    # stops mod_rewrite from processing any more rules.
+    RewriteRule \.(?:jpeg|jpg|gif|png|webp)$ /image-resizer.php [QSA,L]
 </IfModule>
 ```
 The lines cause all images with the extension jpeg, jpg, gif, png or webp to be sent to a PHP file
