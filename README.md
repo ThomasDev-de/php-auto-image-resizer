@@ -86,7 +86,7 @@ $options = [
     "cache" => "/cache/", // the folder from documentRoot
     "resolution" => null, // the max screen width
     "breakpoints" => [1200, 992, 768, 480, 320], // the breakpoints
-    "compressionQuality" => 100 // quality
+    "compressionQuality" => 85 // quality
 ];
 
 new ImageCache($options);
